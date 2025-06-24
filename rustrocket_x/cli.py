@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 
 from . import __version__
-from .commands import metrics
+from .commands import autopost, metrics
 
 console = Console()
 app = typer.Typer(
@@ -15,6 +15,7 @@ app = typer.Typer(
 
 # Add subcommands
 app.add_typer(metrics.app, name="metrics", help="X/Twitter metrics and analytics")
+app.add_typer(autopost.app, name="autopost", help="X/Twitter automation and posting")
 
 
 def version_callback(value: bool):

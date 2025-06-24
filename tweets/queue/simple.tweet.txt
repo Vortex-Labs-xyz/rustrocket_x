@@ -1,0 +1,9 @@
+---
+tags: ["update"]
+---
+
+Quick update: RustRocket X v0.1.0 is now live! 
+
+Check out the new autopost feature for seamless Twitter automation.
+
+#Update #RustRocket

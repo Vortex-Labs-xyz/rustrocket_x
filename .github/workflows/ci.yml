@@ -5,6 +5,9 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  schedule:
+    # Daily autopost cron at 08:00 UTC
+    - cron: '0 8 * * *'
 
 jobs:
   test:
@@ -24,7 +27,7 @@ jobs:
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
-        poetry-version: latest
+        version: latest
         
     - name: Configure Poetry
       run: poetry config virtualenvs.create true
@@ -39,4 +42,39 @@ jobs:
       run: poetry run ruff check .
       
     - name: Run tests
-      run: poetry run pytest -v 
+      run: poetry run pytest -v
+
+  autopost-cron:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        
+    - name: Configure Poetry
+      run: poetry config virtualenvs.create true
+        
+    - name: Install dependencies
+      run: poetry install
+      
+    - name: Run autopost dry-run
+      run: poetry run rrx autopost run --dry-run --max-tweets 5
+      env:
+        # Note: In production, add real credentials as GitHub secrets
+        X_API_KEY: ${{ secrets.X_API_KEY }}
+        X_API_SECRET: ${{ secrets.X_API_SECRET }}
+        X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+        X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+      
+    - name: Show autopost status
+      run: poetry run rrx autopost status 
