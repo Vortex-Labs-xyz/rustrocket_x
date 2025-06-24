@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "rustrocket_x"
+version = "0.1.0"
+description = "Lightweight Python package for X/Twitter API analytics (Free Plan)"
+authors = ["Vortex Team"]
+readme = "README.md"
+packages = [{include = "rustrocket_x"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+typer = ">=0.12"
+pydantic-settings = ">=0.3"
+requests = ">=2.32"
+rich = ">=13.7"
+python-dotenv = ">=1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0"
+black = "*"
+ruff = "*"
+
+[tool.poetry.scripts]
+rrx = "rustrocket_x.cli:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "B", "A", "C", "Q"] 
