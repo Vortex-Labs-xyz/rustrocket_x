@@ -15,12 +15,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Poetry installieren
 RUN curl -sSL https://install.python-poetry.org | python -
+ENV PATH="/root/.local/bin:$PATH"
 
 # Arbeitsverzeichnis
 WORKDIR /app
 
 # Projekt-Metadaten kopieren und Abhängigkeiten installieren
-COPY pyproject.toml poetry.lock* /app/
+COPY pyproject.toml poetry.lock* README.md /app/
+COPY rustrocket_x/ /app/rustrocket_x/
 RUN poetry install --no-interaction --no-ansi --only main
 
 # Quellcode kopieren
