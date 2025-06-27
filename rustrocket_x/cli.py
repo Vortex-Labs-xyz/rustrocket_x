@@ -1,11 +1,13 @@
 """Main CLI application for rustrocket_x"""
 
+import os
+
 import typer
 from rich.console import Console
 
 from . import __version__
 from .commands import autopost, metrics
-from .metrics import init_metrics, RUNS, FAILURES, DURATION
+from .metrics import DURATION, FAILURES, RUNS, init_metrics
 
 console = Console()
 app = typer.Typer(
@@ -14,8 +16,9 @@ app = typer.Typer(
     add_completion=False,
 )
 
-# Initialize Prometheus metrics exporter
-init_metrics()  # exporter up on port 9100
+# Initialize Prometheus metrics exporter (only in production)
+if os.getenv("PYTEST_CURRENT_TEST") is None:  # Skip in tests
+    init_metrics()  # exporter up on port 9100
 
 # Add subcommands
 app.add_typer(metrics.app, name="metrics", help="X/Twitter metrics and analytics")
@@ -38,7 +41,7 @@ def main(
     """rustrocket_x - X/Twitter API analytics tool"""
     if ctx.invoked_subcommand is None:
         return
-        
+
     with DURATION.time():
         RUNS.inc()
         try:
