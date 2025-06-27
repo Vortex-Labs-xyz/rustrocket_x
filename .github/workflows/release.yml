@@ -30,11 +30,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and test image locally
-        run: |
-          docker build -t test-image .
-          echo "Local build successful"
-
       - uses: docker/build-push-action@v5
         with:
           context: .
