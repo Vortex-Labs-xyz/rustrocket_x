@@ -5,6 +5,7 @@ from rich.console import Console
 
 from . import __version__
 from .commands import autopost, metrics
+from .metrics import init_metrics, RUNS, FAILURES, DURATION
 
 console = Console()
 app = typer.Typer(
@@ -12,6 +13,9 @@ app = typer.Typer(
     help="rustrocket_x - X/Twitter API analytics (Free Plan)",
     add_completion=False,
 )
+
+# Initialize Prometheus metrics exporter
+init_metrics()  # exporter up on port 9100
 
 # Add subcommands
 app.add_typer(metrics.app, name="metrics", help="X/Twitter metrics and analytics")
@@ -24,14 +28,25 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: bool = typer.Option(
         None, "--version", "-v", callback=version_callback, help="Show version and exit"
     ),
 ):
     """rustrocket_x - X/Twitter API analytics tool"""
-    pass
+    if ctx.invoked_subcommand is None:
+        return
+        
+    with DURATION.time():
+        RUNS.inc()
+        try:
+            # Command execution is handled by typer automatically
+            pass
+        except Exception:
+            FAILURES.inc()
+            raise
 
 
 if __name__ == "__main__":

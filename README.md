@@ -25,6 +25,18 @@ cd rustrocket_x
 poetry install
 ```
 
+## Monitoring
+
+RustRocket X includes built-in Prometheus metrics for monitoring CLI usage and performance:
+
+- **Endpoint:** `http://localhost:9100/metrics`
+- **Metrics:**
+  - `rrx_runs_total` - Total CLI command executions
+  - `rrx_failures_total` - Commands that raised exceptions  
+  - `rrx_duration_seconds` - Command execution time histogram
+
+The metrics server starts automatically when running any CLI command and exposes metrics on port 9100.
+
 ### Setup X/Twitter API
 
 1. Copy the example environment file:
