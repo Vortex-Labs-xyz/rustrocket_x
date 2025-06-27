@@ -32,7 +32,7 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ startsWith(github.ref, 'refs/tags') }}
+          push: true
           tags: |
             ghcr.io/vortex-labs-xyz/rustrocket_x:latest
             ghcr.io/vortex-labs-xyz/rustrocket_x:${{ github.ref_name }} 
