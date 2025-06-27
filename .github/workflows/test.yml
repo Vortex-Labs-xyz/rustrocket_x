@@ -1,0 +1,26 @@
+name: Test Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["test-*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Simple test
+        run: |
+          echo "Testing GitHub Actions..."
+          echo "Repository: ${{ github.repository }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          ls -la
+          
+      - name: Test Docker build
+        run: |
+          echo "Testing Docker build..."
+          docker build -t test-image .
+          echo "Docker build successful!" 
