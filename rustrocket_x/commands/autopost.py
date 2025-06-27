@@ -259,7 +259,7 @@ def process_all_tweets(
     dry_run: bool,
     log_file: Path,
     pin_file_path: Path,
-    done_path: Path
+    done_path: Path,
 ) -> tuple[int, int]:
     """Process all tweet files and return success/error counts"""
     success_count = 0
