@@ -20,15 +20,15 @@ ENV PATH="/root/.local/bin:$PATH"
 # Arbeitsverzeichnis
 WORKDIR /app
 
-# Projekt-Metadaten kopieren und Abhängigkeiten installieren
-COPY pyproject.toml poetry.lock* README.md /app/
-COPY rustrocket_x/ /app/rustrocket_x/
-RUN poetry install --no-interaction --no-ansi --only main
+# Nur Dependencies installieren (ohne das Projekt)
+COPY pyproject.toml poetry.lock README.md ./
+RUN poetry install --no-interaction --no-ansi --only main --no-root
 
 # Quellcode kopieren
-COPY . /app
+COPY rustrocket_x/ ./rustrocket_x/
 
-
+# Jetzt das Projekt installieren
+RUN poetry install --no-interaction --no-ansi --only main
 
 # ––––– Runtime Stage –––––
 FROM python:3.12-slim AS runtime
