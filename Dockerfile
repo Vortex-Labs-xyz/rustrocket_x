@@ -1,46 +1,36 @@
-# ––––– Build Stage –––––
-FROM python:3.12-slim AS build
+# Multi-stage build for rustrocket_x Python package
+FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_VIRTUALENVS_IN_PROJECT=false
+    PIP_NO_CACHE_DIR=1
 
-# System-Abhängigkeiten
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         build-essential \
-        gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Poetry installieren
-RUN curl -sSL https://install.python-poetry.org | python -
-ENV PATH="/root/.local/bin:$PATH"
+# Install Poetry
+RUN pip install poetry==1.8.4
 
-# Arbeitsverzeichnis
+# Configure Poetry
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
 WORKDIR /app
 
-# Nur Dependencies installieren (ohne das Projekt)
-COPY pyproject.toml poetry.lock README.md ./
-RUN poetry install --no-interaction --no-ansi --only main --no-root
+# Install dependencies
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --only main --no-root && rm -rf $POETRY_CACHE_DIR
 
-# Quellcode kopieren
+# Copy source code
 COPY rustrocket_x/ ./rustrocket_x/
+COPY README.md ./
 
-# Jetzt das Projekt installieren
-RUN poetry install --no-interaction --no-ansi --only main
+# Install the package
+RUN poetry install --only main
 
-# ––––– Runtime Stage –––––
-FROM python:3.12-slim AS runtime
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# Abhängigkeiten und App übernehmen
-COPY --from=build /usr/local /usr/local
-COPY --from=build /app /app
-
-WORKDIR /app
-
-# Default-Entrypoint
+# Default entrypoint
 CMD ["python", "-m", "rustrocket_x"] 

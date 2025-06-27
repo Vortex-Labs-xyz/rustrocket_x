@@ -53,8 +53,8 @@ Thumbs.db
 
 # Environment files with API keys - NEVER commit these!
 .env
+.env.*
 .env_config
-.env.local
-.env.*.local
+.envrc
 
 # NOTE: .env files are ignored to protect API tokens 
