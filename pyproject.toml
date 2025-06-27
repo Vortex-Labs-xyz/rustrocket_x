@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "rustrocket_x"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.13"
 typer = ">=0.12"
 pydantic-settings = ">=0.3"
 requests = ">=2.32"
@@ -32,11 +32,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py313']
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "N", "B", "A", "C", "Q"] 
