@@ -27,9 +27,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create package namespace
+      - name: Set lowercase repository owner
+        id: repo_owner
         run: |
-          echo "Creating package namespace for first-time setup..."
+          echo "owner_lower=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
           
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -37,8 +38,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/rustrocket_x:latest
-            ghcr.io/${{ github.repository_owner }}/rustrocket_x:${{ github.ref_name }}
+            ghcr.io/${{ steps.repo_owner.outputs.owner_lower }}/rustrocket_x:latest
+            ghcr.io/${{ steps.repo_owner.outputs.owner_lower }}/rustrocket_x:${{ github.ref_name }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }} 
