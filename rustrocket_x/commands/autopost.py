@@ -207,61 +207,33 @@ def process_tweet_file(
         return {"success": False, "error": str(e), "text": "", "metadata": {}}
 
 
-@app.command("run")
-def autopost_run(
-    queue_dir: str = typer.Option(
-        "tweets/queue", "--queue-dir", help="Queue directory path"
-    ),
-    done_dir: str = typer.Option(
-        "tweets/done", "--done-dir", help="Done directory path"
-    ),
-    pin_file: str = typer.Option("pinned.txt", "--pin-file", help="Pinned tweets file"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview only, don't post"),
-    max_tweets: int = typer.Option(
-        10, "--max-tweets", help="Maximum tweets to process"
-    ),
-):
-    """
-    Process tweet queue and post to X/Twitter
-
-    Scans queue directory for .tweet.md and .tweet.txt files,
-    processes YAML front-matter, converts Markdown to text,
-    posts tweets, and moves files to done directory.
-    """
-    console.print(
-        Panel.fit(
-            "[bold blue]🚀 RustRocket X - Twitter Autopost[/bold blue]\n"
-            f"Queue: {queue_dir}\n"
-            f"Done: {done_dir}\n"
-            f"Dry-run: {'Yes' if dry_run else 'No'}"
-        )
-    )
-
-    # Setup paths
+def setup_directories(queue_dir: str, done_dir: str) -> tuple[Path, Path, Path]:
+    """Setup and create necessary directories"""
     queue_path = Path(queue_dir)
     done_path = Path(done_dir)
-    pin_file_path = Path(pin_file)
     log_file = done_path / "autopost.log"
 
-    # Create directories if needed
     queue_path.mkdir(parents=True, exist_ok=True)
     done_path.mkdir(parents=True, exist_ok=True)
 
-    # Find tweet files
+    return queue_path, done_path, log_file
+
+
+def discover_tweet_files(queue_path: Path, max_tweets: int) -> List[Path]:
+    """Discover and sort tweet files from queue directory"""
     tweet_files = []
     for pattern in ["*.tweet.md", "*.tweet.txt"]:
         tweet_files.extend(queue_path.glob(pattern))
-
-    if not tweet_files:
-        console.print("[yellow]No tweet files found in queue directory[/yellow]")
-        return
 
     # Sort by modification time (oldest first)
     tweet_files.sort(key=lambda f: f.stat().st_mtime)
 
     # Limit number of tweets
-    tweet_files = tweet_files[:max_tweets]
+    return tweet_files[:max_tweets]
 
+
+def display_queue_status(tweet_files: List[Path], dry_run: bool) -> None:
+    """Display the current queue status"""
     console.print(f"\n[cyan]Found {len(tweet_files)} tweet file(s) to process:[/cyan]")
 
     # Display files to process
@@ -280,14 +252,16 @@ def autopost_run(
     if dry_run:
         console.print("\n[yellow]DRY-RUN MODE: No actual posting will occur[/yellow]")
 
-    # Initialize Twitter client
-    twitter_client = get_twitter_client(dry_run=dry_run)
 
-    # Load pinned tweets
-    pinned_tweets = load_pinned_tweets(pin_file_path)
-    console.print(f"\n[dim]Currently pinned tweets: {len(pinned_tweets)}[/dim]")
-
-    # Process each file
+def process_all_tweets(
+    tweet_files: List[Path],
+    twitter_client,
+    dry_run: bool,
+    log_file: Path,
+    pin_file_path: Path,
+    done_path: Path
+) -> tuple[int, int]:
+    """Process all tweet files and return success/error counts"""
     success_count = 0
     error_count = 0
 
@@ -346,7 +320,13 @@ def autopost_run(
             )
             error_count += 1
 
-    # Summary
+    return success_count, error_count
+
+
+def display_summary(
+    success_count: int, error_count: int, dry_run: bool, log_file: Path
+) -> None:
+    """Display processing summary"""
     console.print("\n[bold]Summary:[/bold]")
     console.print(f"✅ Successful: {success_count}")
     console.print(f"❌ Errors: {error_count}")
@@ -356,6 +336,66 @@ def autopost_run(
 
     if dry_run:
         console.print("[yellow]DRY-RUN: No files were moved or posted[/yellow]")
+
+
+@app.command("run")
+def autopost_run(
+    queue_dir: str = typer.Option(
+        "tweets/queue", "--queue-dir", help="Queue directory path"
+    ),
+    done_dir: str = typer.Option(
+        "tweets/done", "--done-dir", help="Done directory path"
+    ),
+    pin_file: str = typer.Option("pinned.txt", "--pin-file", help="Pinned tweets file"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview only, don't post"),
+    max_tweets: int = typer.Option(
+        10, "--max-tweets", help="Maximum tweets to process"
+    ),
+):
+    """
+    Process tweet queue and post to X/Twitter
+
+    Scans queue directory for .tweet.md and .tweet.txt files,
+    processes YAML front-matter, converts Markdown to text,
+    posts tweets, and moves files to done directory.
+    """
+    console.print(
+        Panel.fit(
+            "[bold blue]🚀 RustRocket X - Twitter Autopost[/bold blue]\n"
+            f"Queue: {queue_dir}\n"
+            f"Done: {done_dir}\n"
+            f"Dry-run: {'Yes' if dry_run else 'No'}"
+        )
+    )
+
+    # Setup paths and directories
+    queue_path, done_path, log_file = setup_directories(queue_dir, done_dir)
+    pin_file_path = Path(pin_file)
+
+    # Find tweet files
+    tweet_files = discover_tweet_files(queue_path, max_tweets)
+
+    if not tweet_files:
+        console.print("[yellow]No tweet files found in queue directory[/yellow]")
+        return
+
+    # Display queue status
+    display_queue_status(tweet_files, dry_run)
+
+    # Initialize Twitter client
+    twitter_client = get_twitter_client(dry_run=dry_run)
+
+    # Load pinned tweets
+    pinned_tweets = load_pinned_tweets(pin_file_path)
+    console.print(f"\n[dim]Currently pinned tweets: {len(pinned_tweets)}[/dim]")
+
+    # Process all tweets
+    success_count, error_count = process_all_tweets(
+        tweet_files, twitter_client, dry_run, log_file, pin_file_path, done_path
+    )
+
+    # Display summary
+    display_summary(success_count, error_count, dry_run, log_file)
 
 
 @app.command("status")
